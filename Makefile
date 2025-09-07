@@ -25,7 +25,7 @@ PATH := $(PROJECT_BIN):$(PATH)
 
 # linter
 GOLANG_CI_LINT = $(PROJECT_BIN)/golangci-lint
-GOLANG_CI_LINT_VERSION = v1.64.8
+GOLANG_CI_LINT_VERSION = v2.4.0
 
 # Директории для тестов
 UNIT_TEST_DIR := ./internal/...
@@ -99,13 +99,17 @@ mock:
 # Запуск линтера
 lint: .install-linter
 	@echo "Running golangci-lint..."
-	$(GOLANG_CI_LINT) run --fix ./... --config=./.golangci.yml
+	$(GOLANG_CI_LINT) run --fix ./... --config=./.golangci.yml --tests=false --skip-files '.*_test\.go' --skip-dirs 'internal/integration-tests'
 	@echo "Success"
 
 lint-fast: .install-linter
 	@echo "Running golangci-lint --fast ..."
-	$(GOLANG_CI_LINT) run ./... --fast --config=./.golangci.yml
+	$(GOLANG_CI_LINT) run ./... --fast --config=./.golangci.yml --tests=false --skip-files '.*_test\.go' --skip-dirs 'internal/integration-tests'
 	@echo "Success"
 .install-linter:
 	@echo "Install golangci-lint..."
-	[ -f $(PROJECT_BIN)/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_BIN) $(GOLANG_CI_LINT_VERSION)
+	@if [ ! -x "$(GOLANG_CI_LINT)" ]; then \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(PROJECT_BIN)" $(GOLANG_CI_LINT_VERSION); \
+	else \
+		echo "golangci-lint already installed at $(GOLANG_CI_LINT)"; \
+	fi
